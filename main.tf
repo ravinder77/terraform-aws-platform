@@ -1,6 +1,6 @@
 
 module "vpc" {
-  source = "./modules/vpc"
+  source   = "./modules/vpc"
   vpc_cidr = "31.0.0.0/16"
   vpc_name = "my-vpc"
   azs = [

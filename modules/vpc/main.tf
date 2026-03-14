@@ -1,11 +1,12 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "6.17.0"
-    }
-  }
-}
+# Data Source
+data "aws_availability_zones" "available" {}
+
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+
+# VPC
 resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr
   enable_dns_support = true
@@ -16,6 +17,7 @@ resource "aws_vpc" "main" {
   }
 }
 
+# Internet Gateway
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
   tags = {
@@ -23,6 +25,7 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
+# Public Subnet
 resource "aws_subnet" "public_subnet" {
   count = length(var.public_subnets)
 
@@ -36,6 +39,7 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
+# Private Subnet
 resource "aws_subnet" "private_subnet" {
   count = length(var.private_subnets)
 
@@ -48,6 +52,7 @@ resource "aws_subnet" "private_subnet" {
   }
 }
 
+#
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 

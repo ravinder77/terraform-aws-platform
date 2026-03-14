@@ -14,3 +14,7 @@ output "private_subnets" {
 output "nat_gateway_id" {
   value = aws_nat_gateway.nat[*].id
 }
+
+output "aws_account_id"  {
+  value = ""
+}
