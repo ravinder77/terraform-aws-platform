@@ -1,8 +1,3 @@
-variable "environment" {
-  description = "Environment name (e.g. dev, staging, prod)"
-  type        = string
-}
-
 variable "identifier" {
   description = "Unique identifier for the RDS instance."
   type        = string
@@ -13,14 +8,6 @@ variable "identifier" {
   }
 }
 
-
-variable "tags" {
-  description = "Tags to apply to all resources."
-  type        = map(string)
-  default     = {}
-}
-
-#----- Engine -----
 variable "engine" {
   description = "Database engine."
   type        = string
@@ -35,20 +22,19 @@ variable "engine" {
 variable "engine_version" {
   description = "Database engine version."
   type        = string
-  default     = "17"
+  default     = "15.7"
 }
-
-variable "major_engine_version" {
-  description = "Major engine version for option group"
-  type        = string
-  default     = "15"
-}
-
 
 variable "instance_class" {
   description = "RDS instance class."
   type        = string
   default     = "db.t3.medium"
+}
+
+variable "parameter_group_family" {
+  description = "Optional override for the DB parameter group family."
+  type        = string
+  default     = null
 }
 
 variable "license_model" {
@@ -57,7 +43,6 @@ variable "license_model" {
   default     = null
 }
 
-#------Storage -------
 variable "allocated_storage" {
   description = "Initial storage allocation in GiB."
   type        = number
@@ -91,25 +76,6 @@ variable "storage_type" {
   }
 }
 
-variable "iops" {
-  description = "Provisioned IOPS (required for io1/io2)"
-  type = number
-  default = null
-}
-
-variable "storage_encrypted" {
-  description = "Enable storage encryption"
-  type        = bool
-  default     = true
-}
-
-variable "kms_key_id" {
-  description = "KMS Key ARN for storage encryption"
-  type        = string
-  default     = null
-}
-
-# ----- Credentials--------
 variable "db_name" {
   description = "Initial database name."
   type        = string
@@ -121,37 +87,23 @@ variable "username" {
   sensitive   = true
 }
 
-variable "port" {
-  description = "Database port"
-  type        = number
-  default     = 5432
-}
-
-# ------- Network -------
 variable "vpc_id" {
   description = "VPC ID used by the RDS security group."
   type        = string
 }
 
 variable "subnet_ids" {
-  description = "List of subnet IDs for the DB subnet group"
+  description = "Subnet IDs used for the DB subnet group."
   type        = list(string)
-}
 
-variable "create_db_subnet_group" {
-  description = "Whether to create a DB subnet group"
-  type        = bool
-  default     = true
-}
-
-variable "db_subnet_group_name" {
-  description = "Existing DB subnet group name (used if create_db_subnet_group = false)"
-  type        = string
-  default     = null
+  validation {
+    condition     = length(var.subnet_ids) >= 2
+    error_message = "subnet_ids must contain at least two subnets."
+  }
 }
 
 variable "publicly_accessible" {
-  description = "Whether the DB is publicly accessible"
+  description = "Whether the DB is publicly accessible."
   type        = bool
   default     = false
 }
@@ -162,89 +114,36 @@ variable "multi_az" {
   default     = true
 }
 
-variable "availability_zone" {
-  description = "AZ for single-AZ deployment"
-  type        = string
-  default     = null
-}
-
-# ----Security Group -------
-variable "create_security_group" {
-  description = "Whether to create a security group for the RDS instance"
-  type        = bool
-  default     = true
-}
-
 variable "allowed_cidr_blocks" {
-  description = "CIDR blocks allowed to connect to the DB port"
+  description = "CIDR blocks allowed to connect to the database."
   type        = list(string)
   default     = []
 }
 
 variable "allowed_security_group_ids" {
-  description = "Security group IDs allowed to connect to the DB"
+  description = "Security group IDs allowed to connect to the database."
   type        = list(string)
   default     = []
 }
 
 variable "additional_security_group_ids" {
-  description = "Additional security group IDs to attach to the RDS instance"
+  description = "Additional security groups to attach to the RDS instance."
   type        = list(string)
   default     = []
 }
 
-#------ Parameter & Option Groups --------
-
-variable "create_db_parameter_group" {
-  description = "Whether to create a DB parameter group"
-  type        = bool
-  default     = true
-}
-
-variable "db_parameter_group_name" {
-  description = "Existing parameter group name (used if create_db_parameter_group = false)"
-  type        = string
-  default     = null
-}
-
-variable "parameter_group_family" {
-  description = "DB parameter group family (e.g. postgres15, mysql8.0)"
-  type        = string
-  default     = "postgres15"
-}
-
 variable "parameters" {
-  description = "List of parameter maps {name, value, apply_method}"
+  description = "Custom DB parameter group parameters."
   type = list(object({
     name         = string
     value        = string
-    apply_method = optional(string, "immediate")
+    apply_method = optional(string)
   }))
   default = []
 }
 
-variable "create_db_option_group" {
-  description = "Whether to create a DB option group (MySQL/MariaDB)"
-  type        = bool
-  default     = false
-}
-
-variable "db_option_group_name" {
-  description = "Existing option group name (used if create_db_option_group = false)"
-  type        = string
-  default     = null
-}
-
-variable "options" {
-  description = "List of options for the DB option group"
-  type        = any
-  default     = []
-}
-
-# ----Backups--------
-
 variable "backup_retention_period" {
-  description = "Number of days to retain backup (0 disables backup)."
+  description = "Number of days to retain backups."
   type        = number
   default     = 7
 
@@ -260,14 +159,8 @@ variable "backup_window" {
   default     = "03:00-04:00"
 }
 
-variable "delete_automated_backups" {
-  description = "Whether to delete automated backups on instance deletion"
-  type        = bool
-  default     = true
-}
-
 variable "copy_tags_to_snapshot" {
-  description = "Copy all instance tags to snapshots"
+  description = "Whether instance tags are copied to snapshots."
   type        = bool
   default     = true
 }
@@ -278,36 +171,34 @@ variable "skip_final_snapshot" {
   default     = false
 }
 
-# -------Maintenance------
 variable "maintenance_window" {
-  description = "Weekly maintenance window, e.g. Mon:05:00-Mon:06:00"
+  description = "Weekly maintenance window."
   type        = string
   default     = "Mon:05:00-Mon:06:00"
 }
 
 variable "auto_minor_version_upgrade" {
-  description = "Enable automatic minor version upgrades"
+  description = "Whether to enable automatic minor version upgrades."
   type        = bool
   default     = true
 }
 
 variable "allow_major_version_upgrade" {
-  description = "Allow major version upgrades"
+  description = "Whether to allow major version upgrades."
   type        = bool
   default     = false
 }
 
 variable "apply_immediately" {
-  description = "Apply changes immediately or during maintenance window"
+  description = "Whether to apply changes immediately."
   type        = bool
   default     = false
 }
 
-#----- Monitoring -------
 variable "monitoring_interval" {
-  description = "Enhanced monitoring interval in seconds (0, 1, 5, 10, 15, 30, 60)"
+  description = "Enhanced monitoring interval in seconds. Set to 0 to disable."
   type        = number
-  default     = 60
+  default     = 0
 
   validation {
     condition     = contains([0, 1, 5, 10, 15, 30, 60], var.monitoring_interval)
@@ -315,22 +206,21 @@ variable "monitoring_interval" {
   }
 }
 
-variable "create_monitoring_role" {
-  description = "Create IAM role for enhanced monitoring"
-  type        = bool
-  default     = true
-}
-
 variable "monitoring_role_arn" {
   description = "IAM role ARN used for enhanced monitoring. Required when monitoring_interval > 0."
   type        = string
   default     = null
+
+  validation {
+    condition     = var.monitoring_interval == 0 || var.monitoring_role_arn != null
+    error_message = "monitoring_role_arn must be set when monitoring_interval is greater than 0."
+  }
 }
 
 variable "enabled_cloudwatch_logs_exports" {
-  description = "Log types to export to CloudWatch (e.g. postgresql, upgrade, error, slowquery)"
+  description = "Optional override for CloudWatch log exports."
   type        = list(string)
-  default     = ["postgresql"]
+  default     = null
 }
 
 variable "performance_insights_enabled" {
@@ -339,33 +229,23 @@ variable "performance_insights_enabled" {
   default     = true
 }
 
-variable "performance_insights_kms_key_id" {
-  description = "KMS Key ARN for Performance Insights encryption"
-  type        = string
-  default     = null
-}
-
 variable "performance_insights_retention_period" {
-  description = "Performance Insights data retention in days (7 or 731)"
+  description = "Performance Insights data retention in days."
   type        = number
   default     = 7
 }
 
-#------ Protection------
 variable "deletion_protection" {
-  description = "Enable deletion protection"
+  description = "Whether to enable deletion protection."
   type        = bool
   default     = true
 }
 
-# ----Cloudwatch Alarms ------
-
-variable "create_cloudwatch_alarms" {
-  description = "Create CloudWatch alarms for the RDS instance"
+variable "create_read_replica" {
+  description = "Whether to create a single read replica."
   type        = bool
-  default     = true
+  default     = false
 }
-
 
 variable "enable_cloudwatch_alarms" {
   description = "Whether to create CloudWatch alarms for the primary instance."
@@ -404,9 +284,13 @@ variable "secret_recovery_window_in_days" {
 }
 
 variable "kms_key_deletion_window_in_days" {
-  description = "Deletion window in days for the KMS key."
+  description = "Deletion window in days for the module-managed KMS key."
   type        = number
   default     = 10
 }
 
-
+variable "tags" {
+  description = "Tags to apply to all resources."
+  type        = map(string)
+  default     = {}
+}

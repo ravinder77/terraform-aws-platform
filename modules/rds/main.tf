@@ -71,6 +71,16 @@ resource "aws_security_group" "rds_sg" {
   vpc_id      = var.vpc_id
 
   dynamic "ingress" {
+    for_each = var.allowed_cidr_blocks
+    content {
+      from_port   = local.port
+      to_port     = local.port
+      protocol    = "tcp"
+      cidr_blocks = [ingress.value]
+    }
+  }
+
+  dynamic "ingress" {
     for_each = var.allowed_security_group_ids
     content {
       from_port                = local.port
@@ -116,7 +126,7 @@ resource "aws_db_instance" "main" {
   multi_az               = var.multi_az
   db_subnet_group_name   = aws_db_subnet_group.main.name
   parameter_group_name   = aws_db_parameter_group.main.name
-  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+  vpc_security_group_ids = concat([aws_security_group.rds_sg.id], var.additional_security_group_ids)
   publicly_accessible    = var.publicly_accessible
 
   backup_retention_period = var.backup_retention_period
@@ -153,7 +163,7 @@ resource "aws_db_instance" "replica" {
   identifier             = "${var.identifier}-replica"
   replicate_source_db    = aws_db_instance.main.identifier
   instance_class         = var.instance_class
-  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+  vpc_security_group_ids = concat([aws_security_group.rds_sg.id], var.additional_security_group_ids)
   parameter_group_name   = aws_db_parameter_group.main.name
   publicly_accessible    = var.publicly_accessible
   skip_final_snapshot    = true

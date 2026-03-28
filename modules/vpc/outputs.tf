@@ -15,17 +15,17 @@ output "vpc_cidr_block" {
 
 output "public_subnets" {
   description = "Public subnet IDs."
-  value       = values(aws_subnet.public_subnet)[*].id
+  value       = [for az in var.azs : aws_subnet.public_subnet[az].id]
 }
 
 output "private_subnets" {
   description = "Private subnet IDs."
-  value       = values(aws_subnet.private_subnet)[*].id
+  value       = [for az in var.azs : aws_subnet.private_subnet[az].id]
 }
 
 output "nat_gateway_id" {
   description = "NAT gateway IDs."
-  value       = values(aws_nat_gateway.nat)[*].id
+  value       = [for az in local.nat_gateway_azs : aws_nat_gateway.nat[az].id]
 }
 
 output "public_route_table_id" {
@@ -35,7 +35,7 @@ output "public_route_table_id" {
 
 output "private_route_table_ids" {
   description = "Private route table IDs."
-  value       = values(aws_route_table.private)[*].id
+  value       = local.effective_nat_gateway_mode == "one_per_az" ? [for az in var.azs : aws_route_table.private[az].id] : [aws_route_table.private["shared"].id]
 }
 
 output "internet_gateway_id" {
