@@ -11,9 +11,9 @@ locals {
   )
 }
 
-module "iam" {
+module "iam_users" {
   count  = var.create_iam ? 1 : 0
-  source = "../../modules/iam"
+  source = "../../modules/iam-users"
 
   prefix      = var.project_name
   project     = var.project_name
