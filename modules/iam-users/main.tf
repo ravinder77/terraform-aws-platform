@@ -15,12 +15,21 @@ resource "aws_iam_group" "this" {
 }
 
 resource "aws_iam_group_policy_attachment" "this" {
-  for_each = local.group_policy_attachments
+  for_each = {
+    for attachment in flatten([
+      for group_name, group in var.groups : [
+        for policy_arn in toset(try(group.managed_policy_arns, [])) : {
+          key        = "${group_name}-${md5(policy_arn)}"
+          group_name = group_name
+          policy_arn = policy_arn
+        }
+      ]
+    ]) : attachment.key => attachment
+  }
 
   group      = aws_iam_group.this[each.value.group_name].name
   policy_arn = each.value.policy_arn
 }
-
 resource "aws_iam_user" "this" {
   for_each = var.users
 

@@ -19,15 +19,6 @@ locals {
     ]
   ]))
 
-  group_policy_attachments = merge([
-    for group_name, group in var.groups : {
-      for policy_arn in group.managed_policy_arns :
-      "${group_name}-${md5(policy_arn)}" => {
-        group_name = group_name
-        policy_arn = policy_arn
-      }
-    }
-  ]...)
 
   user_group_memberships = {
     for user_name, user in var.users :
