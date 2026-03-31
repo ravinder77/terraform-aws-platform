@@ -24,6 +24,21 @@ variable "tags" {
   default     = {}
 }
 
+variable "create_iam" {
+  description = "Whether to deploy the IAM module in this environment."
+  type        = bool
+  default     = false
+}
+
+variable "iam_groups" {
+  description = "IAM groups to create in this environment."
+  type = map(object({
+    path                = optional(string, "/")
+    managed_policy_arns = optional(list(string), [])
+  }))
+  default = {}
+}
+
 variable "vpc_cidr" {
   description = "VPC CIDR block."
   type        = string

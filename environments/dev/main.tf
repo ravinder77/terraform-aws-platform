@@ -11,6 +11,17 @@ locals {
   )
 }
 
+module "iam" {
+  count  = var.create_iam ? 1 : 0
+  source = "../../modules/iam"
+
+  prefix      = var.project_name
+  project     = var.project_name
+  environment = var.environment
+  tags        = local.common_tags
+  groups      = var.iam_groups
+}
+
 module "vpc" {
   source = "../../modules/vpc"
 

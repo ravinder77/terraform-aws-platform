@@ -83,10 +83,10 @@ resource "aws_security_group" "rds_sg" {
   dynamic "ingress" {
     for_each = var.allowed_security_group_ids
     content {
-      from_port                = local.port
-      to_port                  = local.port
-      protocol                 = "tcp"
-      source_security_group_id = ingress.value
+      from_port       = local.port
+      to_port         = local.port
+      protocol        = "tcp"
+      security_groups = [ingress.value]
     }
   }
 
