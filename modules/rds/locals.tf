@@ -15,9 +15,8 @@ locals {
     mariadb  = "mariadb${join(".", slice(local.engine_version_parts, 0, min(length(local.engine_version_parts), 2)))}"
   }[var.engine]
 
-  family                    = coalesce(var.parameter_group_family, local.inferred_family)
-  log_exports               = coalesce(var.enabled_cloudwatch_logs_exports, local.default_log_exports[var.engine])
-  final_snapshot_identifier = var.skip_final_snapshot ? null : "${var.identifier}-final"
+  family      = coalesce(var.parameter_group_family, local.inferred_family)
+  log_exports = coalesce(var.enabled_cloudwatch_logs_exports, local.default_log_exports[var.engine])
 
   common_tags = merge(var.tags, {
     ManagedBy = "terraform"

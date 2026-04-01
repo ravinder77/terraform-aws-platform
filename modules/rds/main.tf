@@ -5,6 +5,12 @@ resource "random_password" "master" {
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
+resource "random_id" "final_snapshot_suffix" {
+  count = var.skip_final_snapshot ? 0 : 1
+
+  byte_length = 4
+}
+
 # ----- Secret Manager ---------
 resource "aws_secretsmanager_secret" "rds" {
   name                    = "${var.identifier}/rds/master"
@@ -45,8 +51,8 @@ resource "aws_db_subnet_group" "main" {
 
 # ─── DB Parameter group ───────────
 resource "aws_db_parameter_group" "main" {
-  name   = var.identifier
-  family = local.family
+  name_prefix = "${var.identifier}-"
+  family      = local.family
 
   dynamic "parameter" {
     for_each = var.parameters
@@ -138,7 +144,7 @@ resource "aws_db_instance" "main" {
   apply_immediately           = var.apply_immediately
   deletion_protection         = var.deletion_protection
   skip_final_snapshot         = var.skip_final_snapshot
-  final_snapshot_identifier   = local.final_snapshot_identifier
+  final_snapshot_identifier   = var.skip_final_snapshot ? null : "${var.identifier}-final-${random_id.final_snapshot_suffix[0].hex}"
   copy_tags_to_snapshot       = var.copy_tags_to_snapshot
 
   performance_insights_enabled          = var.performance_insights_enabled

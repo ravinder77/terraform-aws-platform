@@ -23,6 +23,35 @@ module "vpc" {
   tags               = local.common_tags
 }
 
+module "eks" {
+  count  = var.create_eks ? 1 : 0
+  source = "../../modules/eks"
+
+  cluster_name                            = "${local.name_prefix}-${var.eks_cluster_name}"
+  kubernetes_version                      = var.eks_kubernetes_version
+  vpc_id                                  = module.vpc.vpc_id
+  subnet_ids                              = module.vpc.private_subnets
+  node_subnet_ids                         = var.eks_node_subnet_ids
+  endpoint_private_access                 = var.eks_endpoint_private_access
+  endpoint_public_access                  = var.eks_endpoint_public_access
+  public_access_cidrs                     = var.eks_public_access_cidrs
+  cluster_log_retention_in_days           = var.eks_cluster_log_retention_in_days
+  cluster_addons                          = var.eks_cluster_addons
+  node_group_name                         = var.eks_node_group_name
+  node_instance_types                     = var.eks_node_instance_types
+  node_ami_type                           = var.eks_node_ami_type
+  node_capacity_type                      = var.eks_node_capacity_type
+  node_disk_size                          = var.eks_node_disk_size
+  node_desired_size                       = var.eks_node_desired_size
+  node_min_size                           = var.eks_node_min_size
+  node_max_size                           = var.eks_node_max_size
+  node_max_unavailable                    = var.eks_node_max_unavailable
+  ssh_key_name                            = var.eks_ssh_key_name
+  remote_access_source_security_group_ids = var.eks_remote_access_source_security_group_ids
+  create_oidc_provider                    = var.eks_create_oidc_provider
+  tags                                    = local.common_tags
+}
+
 module "rds" {
   count  = var.create_rds ? 1 : 0
   source = "../../modules/rds"

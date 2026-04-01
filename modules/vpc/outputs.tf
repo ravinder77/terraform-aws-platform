@@ -35,7 +35,7 @@ output "public_route_table_id" {
 
 output "private_route_table_ids" {
   description = "Private route table IDs."
-  value       = local.effective_nat_gateway_mode == "one_per_az" ? [for az in var.azs : aws_route_table.private[az].id] : [aws_route_table.private["shared"].id]
+  value       = local.nat_mode == "one_per_az" ? [for az in var.azs : aws_route_table.private[az].id] : [aws_route_table.private["shared"].id]
 }
 
 output "internet_gateway_id" {

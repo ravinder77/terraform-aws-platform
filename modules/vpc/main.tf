@@ -1,5 +1,12 @@
 data "aws_caller_identity" "current" {}
 
+check "public_subnet_length_match" {
+  assert {
+    condition     = length(var.azs) == length(var.public_subnets)
+    error_message = "public_subnets must match number of AZs"
+  }
+}
+
 # VPC
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
@@ -75,11 +82,11 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route" "private_nat" {
-  for_each = local.effective_nat_gateway_mode == "none" ? {} : aws_route_table.private
+  for_each = local.nat_mode == "none" ? {} : aws_route_table.private
 
   route_table_id         = each.value.id
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = local.effective_nat_gateway_mode == "one_per_az" ? aws_nat_gateway.nat[each.key].id : aws_nat_gateway.nat[var.azs[0]].id
+  nat_gateway_id         = local.nat_mode == "one_per_az" ? aws_nat_gateway.nat[each.key].id : aws_nat_gateway.nat[var.azs[0]].id
 }
 
 resource "aws_route_table_association" "public" {
@@ -93,7 +100,7 @@ resource "aws_route_table_association" "private" {
   for_each = aws_subnet.private_subnet
 
   subnet_id      = each.value.id
-  route_table_id = local.effective_nat_gateway_mode == "one_per_az" ? aws_route_table.private[each.key].id : aws_route_table.private["shared"].id
+  route_table_id = local.nat_mode == "one_per_az" ? aws_route_table.private[each.key].id : aws_route_table.private["shared"].id
 }
 
 resource "aws_eip" "nat" {

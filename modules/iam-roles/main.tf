@@ -6,7 +6,7 @@ check "role_custom_policies_exist" {
 }
 
 resource "aws_iam_policy" "custom" {
-  for_each = var.custom_policies
+  for_each = local.custom_policies
 
   name        = "${local.name_prefix}-${each.key}"
   path        = each.value.path
@@ -17,7 +17,7 @@ resource "aws_iam_policy" "custom" {
 }
 
 resource "aws_iam_role" "this" {
-  for_each = var.roles
+  for_each = local.roles
 
   name                  = "${local.name_prefix}-${each.key}"
   path                  = each.value.path
@@ -53,11 +53,7 @@ resource "aws_iam_role_policy" "inline" {
 }
 
 resource "aws_iam_instance_profile" "this" {
-  for_each = {
-    for role_name, role in var.roles :
-    role_name => role
-    if role.create_instance_profile
-  }
+  for_each = local.instance_profiles
 
   name = "${local.name_prefix}-${each.key}"
   path = each.value.path
@@ -67,7 +63,7 @@ resource "aws_iam_instance_profile" "this" {
 }
 
 resource "aws_iam_openid_connect_provider" "this" {
-  for_each = var.oidc_providers
+  for_each = local.oidc_providers
 
   url             = each.value.url
   client_id_list  = each.value.client_id_list
